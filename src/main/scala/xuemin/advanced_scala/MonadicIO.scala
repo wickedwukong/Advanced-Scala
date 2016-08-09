@@ -1,19 +1,23 @@
 package xuemin.advanced_scala
 
-trait IO[A] {
-  def run: Unit
-  def flatMap(f: A => IO[A]): IO[A]
-  def map(f: A => A): IO[A]
+trait IO[A] { self =>
+  def run: A
+  def flatMap[B](f: A => IO[B]): IO[B] = new IO[B] {
+    override def run: B = f(self.run).run
+  }
+  def map[B](f: A => B): IO[B] = new IO[B] {
+    override def run: B = f(self.run)
+  }
+}
+
+object IO {
+  def apply[A](a: => A): IO[A] = new IO[A] {
+    override def run: A = a
+  }
 }
 
 object Pure {
-  def println(msg: String): IO[String] = new IO[String] {
-    override def run: Unit = Predef.println(msg)
-
-    def flatMap(f: String => IO[String]): IO[String] = f(msg)
-
-    def map(f: (String) => String): IO[String] = println(f(msg))
-  }
+  def println(msg: String) = IO.apply(print(msg))
 }
 
 
